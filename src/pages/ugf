@@ -1,0 +1,235 @@
+<script>
+import axios from 'axios';
+import Card from '../components/Card.vue';
+import Aside from '../components/Aside.vue';
+
+export default {
+  name: "products",
+  components: {
+    Card,
+    Aside,
+  },
+  data() {
+    return {
+      products: [], // Массив с продуктами
+      pagination: [],
+      priceRange: {
+        min: null,
+        max: null,
+      },
+      // colors: ["#FF0000", "#00FF00", "#0000FF", "#FFFF00", "#FF00FF", "#00FFFF"], // Массив цветов
+      selectColors: [], // Выбранный цвет
+      selectedCategory: null, // Категории
+      selectTags: [], // Массив выбранных тегов
+      filterList: []
+    };
+  },
+  mounted() {
+    this.getProductList(); // Загружаем продукты при монтировании компонента
+  },
+  methods: {
+    getProductList(page=1) {
+      axios.post('http://localhost:8876/api/products/filter', {
+        'categories' : this.selectedCategory,
+        'tags' : this.selectTags,
+        'colors' : this.selectedColors,
+        'prices' : this.priceRange,
+        'page' : page,
+      })
+      .then(res => {
+        this.products = res.data.data
+        this.pagination = res.data.meta
+    console.log('Ответ сервера:', res.data);
+})
+.catch(error => {
+    console.error('Ошибка:', error);
+});
+      console.log({
+    categories: this.selectedCategory,
+    tags: this.selectTags,
+    colors: this.selectedColors,
+    prices: this.priceRange,
+});
+
+        
+    },
+    nextPage() {
+      if (this.pagination.currentPage < this.pagination.lastPage) {
+        this.getProducts(this.pagination.currentPage + 1);
+      }
+    },
+    prevPage() {
+      if (this.pagination.currentPage > 1) {
+        this.getProducts(this.pagination.currentPage - 1);
+      }
+    },
+    getByName() {
+      this.products.sort((a, b) =>
+        a.title.localeCompare(b.title, 'en', { sensitivity: 'base' })
+      );
+    },
+    getAscending() {
+      this.products.sort((a, b) => a.price - b.price);
+    },
+    getDescending() {
+      this.products.sort((a, b) => b.price - a.price);
+    },
+    handleSort(event) {
+      const value = event.target.value;
+      if (value === 'asc') {
+        this.getAscending();
+      } else if (value === 'desc') {
+        this.getDescending();
+      } else if (value === 'name') {
+        this.getByName();
+      }
+    },
+  },
+};
+</script>
+
+<template>
+  <div class="flex">
+    <!-- Фиксированное боковое меню -->
+    <Aside />
+    <div class="bg-white w-3/5 m-auto rounded-xl shadow-xl shadow-grey-200 mt-20">
+      <div class="p-10">
+        <div class="flex justify-between items-center mb-10">
+          <h1 class="text-3xl font-bold">Все кроссовки</h1>
+          <div class="flex items-center gap-4">
+            <select
+              class="py-2 px-3 border border-gray-200 focus:border-gray-400 rounded-md focus:outline-none"
+              @change="handleSort($event)"
+            >
+              <option value="name">По названию</option>
+              <option value="asc">По цене (дешевые)</option>
+              <option value="desc">По цене (дорогие)</option>
+            </select>
+            <div class="relative">
+              <input
+                type="text"
+                class="border border-gray-200 rounded-md py-2 pl-10 pr-4 focus:outline-none focus:border-gray-400"
+                placeholder="Поиск..."
+              />
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <img src="/search.svg" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-4 gap-10">
+          <div
+            v-for="product in products"
+            :key="product.id"
+          >
+            <Card
+              :title="product.title"
+              :price="product.price"
+              :img="product.image_url"
+            />
+          </div>
+        </div>
+
+        <!-- Навигация пагинации -->
+        <div class="flex justify-center mt-10">
+          <ul class="pagination text-center">
+            <li v-if="pagination.current_page !== 1" class="next"><i class="flaticoin-left-arrows" aria-hidden="true"></i></li>
+
+            <li v-for="(link, index) in pagination.links" :key="index">
+              <template v-if="Number(link.label)">
+            <a @click.prevent="getProductList(link.label)" :class="link.active ? 'active': ''" >{{ link.label }}</a>
+              </template>
+            </li>
+            <li v-if="pagination.current_page !== pagination.last_page" class="next"><i class="flaticoin-next-1" aria-hidden="true"></i></li>
+          </ul>
+     
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<style scoped>
+/* Стили для фиксированного бокового меню */
+aside {
+  position: relative;
+  top: 60px; /* если хедер 60px */
+  left: 0;
+  width: 250px;
+
+  background-color: white;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  box-sizing: border-box;
+  z-index: 10; /* Убедитесь, что оно не перекрывается */
+}
+
+/* Общие стили для контейнера пагинации */
+.flex {
+  display: flex;
+}
+
+.justify-center {
+  justify-content: center;
+}
+
+.mt-10 {
+  margin-top: 2.5rem;
+}
+
+.pagination {
+  display: flex;
+  gap: 10px;
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+.pagination li {
+  display: inline-block;
+}
+
+.pagination li a {
+  display: block;
+  padding: 10px 15px;
+  text-decoration: none;
+  color: #333;
+  font-weight: bold;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.pagination li a.active {
+  background-color: #007bff;
+  color: white;
+}
+
+.pagination li a:hover {
+  background-color: #f0f0f0;
+  color: #007bff;
+}
+
+.next i {
+  font-size: 16px;
+  color: #007bff;
+  cursor: pointer;
+  transition: color 0.3s;
+}
+
+.next i:hover {
+  color: #0056b3;
+}
+
+/* Стили для классов иконок */
+.flaticoin-left-arrows::before {
+  content: '\25C0'; /* Условный символ стрелки влево */
+}
+
+.flaticoin-next-1::before {
+  content: '\25B6'; /* Условный символ стрелки вправо */
+}
+
+
+</style>

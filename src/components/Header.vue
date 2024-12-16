@@ -13,6 +13,12 @@
         <img src="/cart.svg" alt="Cart" />
         <b>1205 руб.</b>
       </li>
+      <router-link to="/products">
+      <li class="flex items-center gap-3 cursor-pointer">
+        <img src="/image.png" width="22" height="19" alt="Favorite" />
+        <span>Товары</span>
+      </li>
+    </router-link>
       <li class="flex items-center gap-3 cursor-pointer">
         <img src="/heart.svg" alt="Favorite" />
         <span>Закладки</span>

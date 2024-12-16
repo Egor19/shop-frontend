@@ -1,9 +1,12 @@
 <script setup>
-import HomePage from './pages/Home.vue';
-import Drawer from './components/Drawer.vue';
+
+import Header from './components/Header.vue';
 </script>
 
 <template>
-  <!-- <Drawer /> -->
-  <HomePage />
+  <Header />
+
+<router-view></router-view>
 </template>
+
+
