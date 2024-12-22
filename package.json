@@ -11,7 +11,8 @@
   },
   "dependencies": {
     "@formkit/auto-animate": "^0.8.0",
-    "axios": "^1.5.1",
+    "axios": "^1.7.9",
+    "cors": "^2.8.5",
     "lodash.debounce": "^4.0.8",
     "vue": "^3.3.4",
     "vue-router": "^4.5.0"

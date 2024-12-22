@@ -4,87 +4,73 @@ import Card from '../components/Card.vue';
 import Sidebar from '../components/Sidebar.vue';
 
 export default {
-name: "products",
-components: {
-    Card,  // Добавляем компонент в раздел components
+  name: "products",
+  components: {
+    Card,
     Sidebar,
-
   },
-
   data() {
     return {
-      products: [], // Это будет массив с продуктами
+      products: [],
       pagination: [],
-
+      sortBy: 'title',
+      sortOrder: 'asc',
     };
   },
-
-mounted() { 
-
-    this.getProducts()
-
-},
-
-
-methods: {
-
-  goToPage(page) {
-    if (page >= 1 && page <= this.pagination.last_page) {
-      this.getProducts(page);
-    }
+  mounted() { 
+    this.getProducts();
   },
-  nextPage() {
-    if (this.pagination.current_page < this.pagination.last_page) {
-      this.getProducts(this.pagination.current_page + 1);
-    }
-  },
-  prevPage() {
-    if (this.pagination.current_page > 1) {
-      this.getProducts(this.pagination.current_page - 1);
-    }
-  },
-
-  applyFilters(filterData) {
-    this.products = filterData;
-  },
-    getProducts(page=1) {
-        axios.post('http://localhost:8876/api/products/filter', {page})
-        .then( res => {
-            this.products = res.data.data;  // Сохраняем полученные продукты
-            console.log(res.data)
-            this.pagination = res.data.meta;
-            this.getByName();
-        })
-        .catch(error => {
-          console.error('Ошибка при получении данных:', error);
-        });
+  methods: {
+    goToPage(page) {
+      if (page >= 1 && page <= this.pagination.last_page) {
+        this.getProducts(page);
+      }
     },
-
-    getByName() {
-        this.products.sort((a, b) => {
-            return a.title.localeCompare(b.title, 'en', { sensitivity: 'base' });
-        });
+    nextPage() {
+      if (this.pagination.current_page < this.pagination.last_page) {
+        this.getProducts(this.pagination.current_page + 1);
+      }
     },
+    prevPage() {
+      if (this.pagination.current_page > 1) {
+        this.getProducts(this.pagination.current_page - 1);
+      }
+    },
+    getProducts(page = 1) {
+      axios.post('http://localhost:8876/api/products/filter', { 
+        page, 
+        sortBy: this.sortBy,  // Передаем актуальные значения сортировки
+        sortOrder: this.sortOrder
+      })
+      .then(res => {
+        this.products = res.data.data;
+        this.pagination = res.data.meta;
+      })
+      .catch(error => {
+        console.error('Ошибка при получении данных:', error);
+      });
+      console.log(this.sortBy, this.sortOrder)
+    },
+    handleSort(event) {
+      const value = event.target.value;
+      
+      // Обновляем параметры сортировки в зависимости от выбора
+      if (value === 'asc') {
+        this.sortBy = 'price';
+        this.sortOrder = 'asc';
+      } else if (value === 'desc') {
+        this.sortBy = 'price';
+        this.sortOrder = 'desc';
+      } else if (value === 'name') {
+        this.sortBy = 'title';
+        this.sortOrder = 'asc';
+      }
 
-    getAscending() {
-    this.products.sort((a, b) => a.price - b.price);
-  },
-  getDescending() {
-    this.products.sort((a, b) => b.price - a.price);
-  },
-  handleSort(event) {
-    
-    const value = event.target.value;
-   
-    if (value === 'asc') {
-      this.getAscending();
-    } else if (value === 'desc') {
-      this.getDescending();
-    } else if (value === 'name') {
-      this.getByName();
-    }
-  },
-}
+      
+      // После изменения сортировки вызываем getProducts с новыми параметрами
+      this.getProducts(); 
+    },
+  }
 }
 </script>
 
